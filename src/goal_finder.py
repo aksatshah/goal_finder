@@ -96,9 +96,8 @@ if __name__ == '__main__':
 	pub = rospy.Publisher('/arty/move_base/goal',MoveBaseActionGoal)
 	goal_location = MoveBaseActionGoal()
 
-
-
 	while not rospy.is_shutdown():
+		character = raw_input("press key to set goal location...")
 		try:
 			(trans,rot) = listener.lookupTransform('/head_pose', '/base_link', rospy.Time(0))
 		except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
@@ -109,22 +108,21 @@ if __name__ == '__main__':
 		x = -trans[2]*math.tan(theta)
 		y = x*math.tan(-yaw)
 		print "dsf"
-		try:
-			character = raw_input("press key to set goal location...")
-			print "x = ", x, "    y = ", y
-			goal_location.goal.target_pose.pose.position.x = x
-			goal_location.goal.target_pose.pose.position.y = y
-			goal_location.goal.target_pose.pose.orientation.w = 1.0
-			goal_location.goal.target_pose.header.frame_id = 'head_pose'
-			goal_location.goal.target_pose.header.stamp = rospy.Time.now()
-			pub.publish(goal_location)
+		# try:
+		print "x = ", x, "    y = ", y
+		goal_location.goal.target_pose.pose.position.x = x
+		goal_location.goal.target_pose.pose.position.y = y
+		goal_location.goal.target_pose.pose.orientation.w = 1.0
+		goal_location.goal.target_pose.header.frame_id = 'base_link'
+		goal_location.goal.target_pose.header.stamp = rospy.Time.now()
+		pub.publish(goal_location)
 			#ac.send_goal(goal)
 			#ac.wait_for_result()
 			#print ac.get_result()
 
 
-		except rospy.ROSInterruptException:
-			print "Interrupt from keyboard"
+		# except rospy.ROSInterruptException:
+		# 	print "Interrupt from keyboard"
 
 		# inkey_buffer=int(random.random()*2)
 		# character = inkey()
