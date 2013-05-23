@@ -35,8 +35,6 @@ def callback(data):
 	pub = rospy.Publisher('cmd_vel',Twist)
 	converter(pub,data)
 	head_tf = tf.TransformBroadcaster()
-	# quaternion = quaternion_from_euler(data.roll,data.pitch,data.yaw)
-	#(data.x_center/1000.0,data.y_center/1000.0,data.z_center/1000.0)
 	head_tf.sendTransform((data.x_center/1000.0,-data.y_center/1000.0,data.z_center/1000.0),
 		quaternion_from_euler(0,data.pitch,math.pi+data.yaw), #roll,pitch,yaw
 		rospy.Time.now(),
@@ -57,30 +55,6 @@ def signal_handler(signal, frame):
         print 'You pressed Ctrl+C!'
         sys.exit(0)
 
-'''
-  //tell the action client that we want to spin a thread by default
-  MoveBaseClient ac("move_base", true);
-
-  //wait for the action server to come up
-  while(!ac.waitForServer(ros::Duration(5.0))){
-    ROS_INFO("Waiting for the move_base action server to come up");
-  }
-
-  move_base_msgs::MoveBaseGoal goal;
-
-  //we'll send a goal to the robot to move 1 meter forward
-  goal.target_pose.header.frame_id = "base_link";
-  goal.target_pose.header.stamp = ros::Time::now();
-
-  goal.target_pose.pose.position.x = 1.0;
-  goal.target_pose.pose.orientation.w = 1.0;
-
-  ROS_INFO("Sending goal");
-  ac.sendGoal(goal);
-
-  ac.waitForResult();
-'''
-
 
 if __name__ == '__main__':
 	inkey_buffer = 0
@@ -90,10 +64,8 @@ if __name__ == '__main__':
 
 	rate = rospy.Rate(10.0)
 
-	#ac = actionlib.SimpleActionClient('move_base', MoveBaseAction)
-	
-	#ac.wait_for_server()
 	pub = rospy.Publisher('/arty/move_base/goal',MoveBaseActionGoal)
+	pub_reverse = rospy.Publisher('/arty/cmd_vel', Twist)
 	goal_location = MoveBaseActionGoal()
 
 	while not rospy.is_shutdown():
@@ -103,39 +75,43 @@ if __name__ == '__main__':
 		except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
 			continue
 		(roll, pitch, yaw) = tf.transformations.euler_from_quaternion([rot[0], rot[1], rot[2], rot[3]])
+		
+		print
+		print "roll = ", roll
+		print
+		print "pitch = ", pitch
+		print
+		print "yaw = ", yaw
+		print
 
-		theta = math.pi/2 + pitch
-		x = -trans[2]*math.tan(theta)
-		y = x*math.tan(-yaw)
-		print "dsf"
-		# try:
-		print "x = ", x, "    y = ", y
-		goal_location.goal.target_pose.pose.position.x = x
-		goal_location.goal.target_pose.pose.position.y = y
-		goal_location.goal.target_pose.pose.orientation.w = 1.0
-		goal_location.goal.target_pose.header.frame_id = 'base_link'
-		goal_location.goal.target_pose.header.stamp = rospy.Time.now()
-		pub.publish(goal_location)
-			#ac.send_goal(goal)
-			#ac.wait_for_result()
-			#print ac.get_result()
+		if pitch < 0.0:
+			print "going forward..."
+			theta = math.pi/2 + pitch
+			x = -trans[2]*math.tan(theta)
+			y = x*math.tan(-yaw)
 
+			print "x = ", x, "    y = ", y
+			if x < 3.0:
+				goal_location.goal.target_pose.pose.position.x = x
+				goal_location.goal.target_pose.pose.position.y = y
+				goal_location.goal.target_pose.pose.orientation.x = 0.0
+				goal_location.goal.target_pose.pose.orientation.y = 0.0
+				goal_location.goal.target_pose.pose.orientation.z = -rot[2]
+				goal_location.goal.target_pose.pose.orientation.w = rot[3]
+				goal_location.goal.target_pose.header.frame_id = 'base_link'
+				goal_location.goal.target_pose.header.stamp = rospy.Time.now()
+				pub.publish(goal_location)
+			else:
+				print "Your are looking too far ahead - please look down"
+		else:
+			move = Twist()
+			if yaw < -0.25:
+				move.angular.z = 1.0
+			elif yaw > 0.25:
+				move.angular.z = -1.0
+			else:
+				move.linear.x=-1.0
+			print move
+			pub_reverse.publish(move)
 
-		# except rospy.ROSInterruptException:
-		# 	print "Interrupt from keyboard"
-
-		# inkey_buffer=int(random.random()*2)
-		# character = inkey()
-		# try:
-		# 	if character == "a":
-		# 		print "pressed a key"
-		# 		print "x = ", x,", y = ",y
-		# 	if character == "e":
-		# 		exit()
-		# except (KeyboardInterrupt, SystemExit):
-		# 	raise
-		# 	print 'Press Ctrl+C'
-
-		# signal.signal(signal.SIGINT, signal_handler)
-		# print 'Press Ctrl+C'
-		# signal.pause()
+		#pub.publish(goal_location)
