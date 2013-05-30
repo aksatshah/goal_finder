@@ -84,7 +84,7 @@ if __name__ == '__main__':
 		print "yaw = ", yaw
 		print
 
-		if pitch < -0.05:
+		if pitch < 0.0:
 			print "going forward..."
 			theta = math.pi/2 + pitch
 			x = -trans[2]*math.tan(theta)
@@ -93,7 +93,7 @@ if __name__ == '__main__':
 			print "x = ", x, "    y = ", y
 			if x < 3.0:
 				goal_location.goal.target_pose.pose.position.x = x
-				goal_location.goal.target_pose.pose.position.y = -y
+				goal_location.goal.target_pose.pose.position.y = y
 				goal_location.goal.target_pose.pose.orientation.x = 0.0
 				goal_location.goal.target_pose.pose.orientation.y = 0.0
 				goal_location.goal.target_pose.pose.orientation.z = rot[2]
