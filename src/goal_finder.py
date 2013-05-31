@@ -84,7 +84,7 @@ if __name__ == '__main__':
 		print "yaw = ", yaw
 		print
 
-		if pitch < 0.0:
+		if pitch < -0.1:
 			print "going forward..."
 			theta = math.pi/2 + pitch
 			x = -trans[2]*math.tan(theta)
@@ -96,7 +96,7 @@ if __name__ == '__main__':
 				goal_location.goal.target_pose.pose.position.y = y
 				goal_location.goal.target_pose.pose.orientation.x = 0.0
 				goal_location.goal.target_pose.pose.orientation.y = 0.0
-				goal_location.goal.target_pose.pose.orientation.z = rot[2]
+				goal_location.goal.target_pose.pose.orientation.z = -rot[2]
 				goal_location.goal.target_pose.pose.orientation.w = rot[3]
 				goal_location.goal.target_pose.header.frame_id = 'base_link'
 				goal_location.goal.target_pose.header.stamp = rospy.Time.now()
