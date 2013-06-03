@@ -84,7 +84,7 @@ if __name__ == '__main__':
 		print "yaw = ", yaw
 		print
 
-		if pitch < -0.1:
+		if pitch < -0.2:
 			print "going forward..."
 			theta = math.pi/2 + pitch
 			x = -trans[2]*math.tan(theta)
